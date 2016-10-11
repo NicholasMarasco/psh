@@ -67,14 +67,26 @@ while(1){
     my $whole;
     for $check (@path){
       $whole = $check.$commandName;
-      print STDERR "TESTING: $whole\n";
       if(-X $whole){
         $execPath = $whole;
         last;
       }
     }
   }
-  next if length $execPath;
-  print "execPath: $execPath\n";
+  next unless length $execPath;
+
+  # Start running stuff
+  my $pid = fork();
+  unless(length $pid){ # failed to fork
+    print STDERR "Failed to fork\n";
+    next;
+  }
+  if ($pid == 0){ # child
+    exec { $execPath } @args or die "Couldn't exec $execPath\n";
+    exit(0);
+  } else { # parent
+    wait;
+#     print "child <$pid> returned with $?\n";
+  }
 }
 
